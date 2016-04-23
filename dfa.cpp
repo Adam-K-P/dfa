@@ -6,6 +6,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 using namespace std;
 
@@ -14,6 +15,9 @@ struct dfa; //forward declaration
 //shorten these names and make life a little easier
 
 using up_str = unique_ptr <string>;
+
+using vec_str = vector <string>;
+using up_vec_str = unique_ptr <vec_str>;
 
 using un_map_str = unordered_map <string, string>;
 using up_un_map_str = unique_ptr <un_map_str>;
@@ -122,6 +126,27 @@ static void build_dfa (up_dfa& the_dfa,
    define_file.close ();
 }
 
+//no string_file specified
+static up_vec_str get_strings_cin () {
+   up_vec_str test_strings = up_vec_str (new vec_str);
+   string line;
+   while (cin >> line) 
+      test_strings->emplace_back (line);
+   return test_strings;
+}
+
+//string_file specified
+static up_vec_str get_strings_file (const up_str& string_file_name) {
+   up_vec_str test_strings = up_vec_str (new vec_str);
+   ifstream string_file (*string_file_name);
+   if (string_file.is_open ()) {
+      string line;
+      while (getline (string_file, line)) 
+         test_strings->emplace_back (line);
+   }
+   return test_strings;
+}
+
 int main (const int argc, const char* const* argv) {
    if (argc < 2 or argc > 3) 
       usage ();
@@ -131,13 +156,21 @@ int main (const int argc, const char* const* argv) {
 
    build_dfa (the_dfa, define_file_name);
 
-   for (const auto& elem: *(the_dfa->transitions)) {
+   up_vec_str test_strings;
+   if (argc == 2)
+      test_strings = get_strings_cin ();
+   else {
+      up_str string_file_name = up_str (new string (argv[2]));
+      test_strings = get_strings_file (string_file_name);
+   }
+
+   /*for (const auto& elem: *(the_dfa->transitions)) {
       cout << "state: " << elem.first << endl;
       for (const auto& elem_: *(elem.second)) {
          cout << "sigma: " << elem_.first << endl
               << "dest_state: " << elem_.second << endl;
       }
-   }
+   }*/
 
    return EXIT_SUCCESS;
 }
